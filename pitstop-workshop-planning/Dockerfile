@@ -1,20 +1,42 @@
-# Utilisation d'une image de base légère et adaptée à votre application
-FROM node:16-alpine
+# Stage 1: Build
+FROM node:20.13-alpine AS build
 
-# Définition du répertoire de travail dans le conteneur
-WORKDIR /app
+# Créer un répertoire de travail
+WORKDIR /usr/src/app
 
-# Copie des fichiers de configuration
-COPY package.json package-lock.json ./
+# Copier package.json et package-lock.json avant les autres fichiers pour optimiser le cache
+COPY package*.json ./
 
-# Installation des dépendances
-RUN npm install --production
+# Installer les dépendances
+RUN npm install
 
-# Copie du reste des fichiers de votre application
+# Copier le reste des fichiers de l'application
 COPY . .
 
-# Exposition du port sur lequel l'application écoute
-EXPOSE 3000
+# Stage 2: Run
+FROM node:20.13-alpine
 
-# Définition de la commande par défaut pour démarrer votre application
-CMD ["npm", "start"]
+# Définir l'environnement de production
+ENV NODE_ENV=production
+
+# Créer un utilisateur et un groupe non-root
+RUN addgroup -S workgroup && adduser -S workuser -G workgroup
+
+# Créer un répertoire de travail et donner les permissions à l'utilisateur non-root
+WORKDIR /usr/src/app
+RUN chown -R workuser:workgroup /usr/src/app
+
+# Copier uniquement les fichiers nécessaires de l'étape de build
+COPY --from=build /usr/src/app /usr/src/app
+
+# Installer uniquement les dépendances nécessaires pour la production
+RUN npm ci --only=production
+
+# Changer d'utilisateur
+USER workuser
+
+# Exposer le port
+EXPOSE 3003
+
+# Commande pour démarrer l'application
+CMD ["npm", "start"]
