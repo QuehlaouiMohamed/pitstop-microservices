@@ -19,7 +19,7 @@ serviceEndpoints:
   pitstop-vehicle-service:
     url: ${VEHICLE_URL:-'http://pitstop-vehicle-service:3002'}
   pitstop-workshop-service:
-    url: ${WORKSHOP_URL:-'http://pitstop-workshop-service:3003'}
+    url: ${WORKSHOP_URL:-'http://pitstop-workshop-planning-service:3003'}
     
  
 policies:

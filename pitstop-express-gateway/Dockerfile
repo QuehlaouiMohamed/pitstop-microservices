@@ -33,7 +33,8 @@ COPY --from=build /usr/src/app /usr/src/app
 RUN npm ci --only=production
 
 # Changer d'utilisateur
-USER Gateway_user
+
+USER workuser
 
 # Exposer le port
 EXPOSE 8080

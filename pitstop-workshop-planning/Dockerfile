@@ -13,6 +13,9 @@ RUN npm install
 # Copier le reste des fichiers de l'application
 COPY . .
 
+# Construire l'application (si nécessaire)
+# RUN npm run build
+
 # Stage 2: Run
 FROM node:20.13-alpine
 

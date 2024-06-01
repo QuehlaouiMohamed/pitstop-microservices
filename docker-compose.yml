@@ -1,0 +1,120 @@
+version: '3.9'
+
+services:
+  # Service Customer
+  pitstop-customer-service:
+    image: xquehlaoui/pitstop-customer:1.0
+    env_file:
+      - ./pitstop-customer/.env
+    depends_on:
+      - pitstop-customer-database
+      - broker-rabbitmq
+    networks:
+      - app-network
+    ports:
+      - "3001:3001"
+
+  pitstop-customer-database:
+    image: mysql:latest
+    env_file:
+      - ./pitstop-customer/.env
+    volumes:
+      - customer-db-data:/var/lib/mysql
+      - ./pitstop-customer/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+    ports:
+      - "3307:3306"
+
+  # Service Vehicle
+  pitstop-vehicle-service:
+    image: xquehlaoui/pitstop-vehicle:1.0
+    env_file:
+      - ./pitstop-vehicle/.env
+    depends_on:
+      - pitstop-vehicle-database
+      - broker-rabbitmq
+    networks:
+      - app-network
+    ports:
+      - "3002:3002"
+
+  pitstop-vehicle-database:
+    image: mysql:latest
+    env_file:
+      - ./pitstop-vehicle/.env
+    volumes:
+      - vehicle-db-data:/var/lib/mysql
+      - ./pitstop-vehicle/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+    ports:
+      - "3308:3306"
+
+  # Service Workshop
+  pitstop-workshop-planning-service:
+    image: xquehlaoui/pitstop-workshop-planning:1.0
+    env_file:
+      - ./pitstop-workshop-planning/.env
+    depends_on:
+      - pitstop-workshop-planning-database
+      - broker-rabbitmq
+    networks:
+      - app-network
+    ports:
+      - "3003:3003"
+
+  pitstop-workshop-planning-database:
+    image: mysql:latest
+    env_file:
+      - ./pitstop-workshop-planning/.env
+    volumes:
+      - workshop-db-data:/var/lib/mysql
+      - ./pitstop-workshop-planning/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+    ports:
+      - "3306:3306"
+
+  # RabbitMQ
+  broker-rabbitmq:
+    image: rabbitmq:3.13.1-alpine
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - app-network
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  # API Gateway
+  api-gateway:
+    image: xquehlaoui/pitstop-express-gateway:1.0
+    depends_on:
+      - pitstop-customer-service
+      - pitstop-vehicle-service
+      - pitstop-workshop-planning-service
+    networks:
+      - app-network
+    ports:
+      - "8080:8080"
+
+  # Web App
+  webapp:
+    image: xquehlaoui/pitstop-webapp:1.0
+    depends_on:
+      - api-gateway
+    ports:
+      - "8081:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  customer-db-data:
+  vehicle-db-data:
+  workshop-db-data:
+  rabbitmq-data:
