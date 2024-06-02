@@ -76,7 +76,7 @@ services:
     ports:
       - "3306:3306"
 
-  # RabbitMQ
+  # RabbitMQ 
   broker-rabbitmq:
     image: rabbitmq:3.13.1-alpine
     ports:
